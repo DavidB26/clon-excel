@@ -97,8 +97,11 @@
 
         newState[x][y] = cell;
 
+        computeAllCells(newState,constants)
+        
         STATE = newState;
 
+      
         renderSpreadSheet();
       }
 
@@ -116,16 +119,27 @@
           .join("\n");
       }
 
-      function computeValue(value) {
-        if (!value.startsWith("=")) return value;
+      function computeAllCells(cells,constants){
+        cells.forEach((rows,x)=>{
+          rows.forEach((cell,y)=>{
+            const computedValue = computeValue(cell.value,constants)
+            cell.computedValue = computedValue
+          })
+        })
+      }
+
+      function computeValue(value,constants) {
+        if(typeof value === 'number') return value
+        if (typeof value.startsWith("=")) return value;
 
         const formula = value.slice(1);
 
         let computedValue;
         try {
           computedValue = eval(`(() =>{
-          
-        })())`);
+          ${constants}
+          return ${formula}
+        })()`);
         } catch (e) {
           computedValue = `!ERROR; ${e.message}`;
         }
