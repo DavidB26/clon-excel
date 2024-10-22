@@ -65,6 +65,13 @@
           outline: 2px solid #09f;
         }
       }
+      .selected {
+        background: rgb(174, 223, 255);
+      }
+
+      th.selected {
+        background: rgb(146, 223, 255);
+      }
     </style>
     <script type="module">
       const $ = (el) => document.querySelector(el);
@@ -80,6 +87,8 @@
 
       const times = (length) => Array.from({ length }, (_, i) => i);
       const getColumn = (i) => String.fromCharCode(FIRST_CHAR_CODE + i);
+
+      let selectedColumn = null;
 
       let STATE = times(COLUMNS).map((i) =>
         times(ROWS).map((j) => ({ computedValue: 0, value: 0 }))
@@ -97,11 +106,9 @@
 
         newState[x][y] = cell;
 
-        computeAllCells(newState,constants)
-        
-        STATE = newState;
+        computeAllCells(newState, generateCellsConstants(newState));
 
-      
+        STATE = newState;
         renderSpreadSheet();
       }
 
@@ -119,18 +126,18 @@
           .join("\n");
       }
 
-      function computeAllCells(cells,constants){
-        cells.forEach((rows,x)=>{
-          rows.forEach((cell,y)=>{
-            const computedValue = computeValue(cell.value,constants)
-            cell.computedValue = computedValue
-          })
-        })
+      function computeAllCells(cells, constants) {
+        cells.forEach((rows, x) => {
+          rows.forEach((cell, y) => {
+            const computedValue = computeValue(cell.value, constants);
+            cell.computedValue = computedValue;
+          });
+        });
       }
 
-      function computeValue(value,constants) {
-        if(typeof value === 'number') return value
-        if (typeof value.startsWith("=")) return value;
+      function computeValue(value, constants) {
+        if (typeof value === "number") return value;
+        if (!value.startsWith("=")) return value;
 
         const formula = value.slice(1);
 
@@ -204,6 +211,32 @@
           { once: true }
         );
       });
+
+      $head.addEventListener("click", (event) => {
+        const th = event.target.closest("th");
+        if (!th) return;
+
+        const x = [...th.parentNode.children].indexOf(th);
+        if (x <= 0) return;
+
+        selectedColumn = x - 1;
+        $$(".selected").forEach((el) => el.classList.remove("selected"));
+        th.classList.add("selected");
+        $$(`tr td:nth-child(${x + 1})`).forEach((el) =>
+          el.classList.add("selected")
+        );
+      });
+
+      document,
+        addEventListener("keydown", (event) => {
+          if (event.key === "Backspace" && selectedColumn !== null) {
+            times(ROWS).forEach((row) => {
+              updateCell({ x: selectedColumn, y: row, value: "" });
+            });
+          }
+
+         renderSpreadSheet()
+        });
       renderSpreadSheet();
     </script>
   </head>
